@@ -1,27 +1,28 @@
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-// Interface for GPS
-interface GPS {
-    String getCurrentLocation();
-    void updateLocation(String newLocation);
-}
-
-// Abstract class Vehicle
-abstract class Vehicle implements GPS {
+// Abstraction & Encapsulation
+abstract class Vehicle {
     private String vehicleId;
     private String driverName;
-    protected double ratePerKm;
+    private double ratePerKm;
 
-    private String currentLocation; // Encapsulation for GPS data
+    // Abstraction
+    public abstract double calculateFare(double distance);
 
-    public Vehicle(String vehicleId, String driverName, double ratePerKm, String startLocation) {
+    public Vehicle(String vehicleId, String driverName, double ratePerKm) {
         this.vehicleId = vehicleId;
         this.driverName = driverName;
         this.ratePerKm = ratePerKm;
-        this.currentLocation = startLocation;
     }
 
-    // Encapsulation: controlled access
+    // Concrete method for vehicle details
+    public void getVehicleDetails() {
+        System.out.println("Vehicle ID: " + vehicleId);
+        System.out.println("Driver Name: " + driverName);
+    }
+    
+    // Encapsulation
     public String getVehicleId() {
         return vehicleId;
     }
@@ -30,18 +31,33 @@ abstract class Vehicle implements GPS {
         return driverName;
     }
 
-    // Concrete method
-    public void getVehicleDetails() {
-        System.out.println("Vehicle ID: " + vehicleId);
-        System.out.println("Driver Name: " + driverName);
-        System.out.println("Rate per Km: " + ratePerKm);
-        System.out.println("Current Location: " + currentLocation);
+    public double getRatePerKm() {
+        return ratePerKm;
+    }
+}
+
+// Abstraction
+interface GPS {
+    String getCurrentLocation();
+    void updateLocation(String newLocation);
+}
+
+// Inheritance & Abstraction
+class Car extends Vehicle implements GPS {
+    private String currentLocation;
+
+    public Car(String vehicleId, String driverName, double ratePerKm, String initialLocation) {
+        super(vehicleId, driverName, ratePerKm);
+        this.currentLocation = initialLocation;
     }
 
-    // Abstract method for fare calculation
-    public abstract double calculateFare(double distance);
+    // Abstraction
+    @Override
+    public double calculateFare(double distance) {
+        return getRatePerKm() * distance;
+    }
 
-    // GPS methods
+    // Abstraction
     @Override
     public String getCurrentLocation() {
         return currentLocation;
@@ -50,69 +66,109 @@ abstract class Vehicle implements GPS {
     @Override
     public void updateLocation(String newLocation) {
         this.currentLocation = newLocation;
-        System.out.println("Location updated to: " + currentLocation);
-    }
-}
-
-// Subclass Car
-class Car extends Vehicle {
-    public Car(String vehicleId, String driverName, double ratePerKm, String startLocation) {
-        super(vehicleId, driverName, ratePerKm, startLocation);
+        System.out.println("Car " + getVehicleId() + " location updated to " + newLocation);
     }
 
     @Override
-    public double calculateFare(double distance) {
-        return distance * ratePerKm + 50; // extra base charge
+    public void getVehicleDetails() {
+        super.getVehicleDetails();
+        System.out.println("Type: Car");
     }
 }
 
-// Subclass Bike
-class Bike extends Vehicle {
-    public Bike(String vehicleId, String driverName, double ratePerKm, String startLocation) {
-        super(vehicleId, driverName, ratePerKm, startLocation);
+// Inheritance & Abstraction
+class Bike extends Vehicle implements GPS {
+    private static final double MINIMUM_FARE = 50.0;
+    private String currentLocation;
+
+    public Bike(String vehicleId, String driverName, double ratePerKm, String initialLocation) {
+        super(vehicleId, driverName, ratePerKm);
+        this.currentLocation = initialLocation;
+    }
+
+    // Abstraction
+    @Override
+    public double calculateFare(double distance) {
+        double fare = getRatePerKm() * distance;
+        return Math.max(fare, MINIMUM_FARE); // Ensures minimum fare
+    }
+
+    // Abstraction
+    @Override
+    public String getCurrentLocation() {
+        return currentLocation;
     }
 
     @Override
-    public double calculateFare(double distance) {
-        return distance * ratePerKm; // no extra charge
+    public void updateLocation(String newLocation) {
+        this.currentLocation = newLocation;
+        System.out.println("Bike " + getVehicleId() + " location updated to " + newLocation);
+    }
+    
+    @Override
+    public void getVehicleDetails() {
+        super.getVehicleDetails();
+        System.out.println("Type: Bike");
     }
 }
 
-// Subclass Auto
+// Inheritance & Abstraction
 class Auto extends Vehicle {
-    public Auto(String vehicleId, String driverName, double ratePerKm, String startLocation) {
-        super(vehicleId, driverName, ratePerKm, startLocation);
+    private static final double FIXED_SURCHARGE = 20.0;
+
+    public Auto(String vehicleId, String driverName, double ratePerKm) {
+        super(vehicleId, driverName, ratePerKm);
     }
 
+    // Abstraction
     @Override
     public double calculateFare(double distance) {
-        return distance * ratePerKm + 20; // small extra charge
+        return (getRatePerKm() * distance) + FIXED_SURCHARGE;
+    }
+    
+    @Override
+    public void getVehicleDetails() {
+        super.getVehicleDetails();
+        System.out.println("Type: Auto");
     }
 }
 
-// Main class
+// Main class to demonstrate the ride-hailing system
 public class RideHailingApplication {
-    // Polymorphic method
-    public static void calculateRideFare(List<Vehicle> vehicles, double distance) {
-        for (Vehicle v : vehicles) {
-            v.getVehicleDetails();
-            System.out.println("Estimated Fare for " + distance + " km: " + v.calculateFare(distance));
-            System.out.println("---------------------------------");
-        }
-    }
-
     public static void main(String[] args) {
+        // Polymorphism
         List<Vehicle> vehicles = new ArrayList<>();
 
-        Car car = new Car("CAR123", "Raj", 15, "Downtown");
-        Bike bike = new Bike("BIKE456", "Riya", 8, "City Mall");
-        Auto auto = new Auto("AUTO789", "Rohan", 10, "Railway Station");
+        // Creating instances of concrete classes
+        Car sedan = new Car("C-1234", "Alice", 12.50, "Central Park");
+        Bike scooter = new Bike("B-5678", "Bob", 8.00, "Downtown");
+        Auto rickshaw = new Auto("A-9012", "Charlie", 10.00);
 
-        vehicles.add(car);
-        vehicles.add(bike);
-        vehicles.add(auto);
+        // Adding vehicles to the list
+        vehicles.add(sedan);
+        vehicles.add(scooter);
+        vehicles.add(rickshaw);
 
-        // Demonstrate polymorphism
-        calculateRideFare(vehicles, 12.5); // assume 12.5 km ride
+        double distance = 10.0; // Distance of the ride in km
+
+        System.out.println("--- Ride Fare Calculation for a " + distance + " km ride ---");
+        // Polymorphism
+        for (Vehicle vehicle : vehicles) {
+            vehicle.getVehicleDetails();
+            double fare = vehicle.calculateFare(distance);
+            System.out.println("Calculated Fare: $" + String.format("%.2f", fare));
+
+            // Polymorphism with the GPS interface
+            if (vehicle instanceof GPS) {
+                GPS gpsVehicle = (GPS) vehicle;
+                System.out.println("Current Location: " + gpsVehicle.getCurrentLocation());
+            }
+
+            System.out.println("----------------------------------------");
+        }
+        
+        System.out.println("--- Updating Vehicle Locations ---");
+        sedan.updateLocation("Midtown");
+        scooter.updateLocation("Uptown");
     }
 }
